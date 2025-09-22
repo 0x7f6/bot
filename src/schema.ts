@@ -5,7 +5,7 @@ export const productProvider = pgEnum('productProvider', ['SOURCEXCHANGE', 'BUIL
 export const currency = pgEnum('currency', ['EUR', 'USD'])
 
 export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
+	id: serial('id').primaryKey(),
 
 	name: varchar('name', { length: 51 }).notNull(),
 	icon: varchar('icon', { length: 255 }).notNull(),
@@ -80,6 +80,8 @@ export const sendMessages = pgTable('send_messages', {
 	id: serial('id').primaryKey(),
 
 	enabled: boolean('enabled').default(true).notNull(),
+	sticky: boolean('sticky').default(false).notNull(),
+
 	discordId: varchar('discordId', { length: 22 }),
 	discordChannelId: varchar('discordChannelId', { length: 22 }).notNull(),
 	message: text('message').notNull(),
@@ -87,8 +89,11 @@ export const sendMessages = pgTable('send_messages', {
 	image: varchar('image', { length: 255 }),
 
 	ticket: boolean('ticket').default(false).notNull(),
+
+	updated: timestamp('updated').default(sql`now()`).notNull(),
 }, (sendMessages) => [
-	uniqueIndex('sendMessages_discordChannelId_discordId_idx').on(sendMessages.discordChannelId, sendMessages.discordId)
+	uniqueIndex('sendMessages_discordChannelId_discordId_idx')
+		.on(sendMessages.discordChannelId, sendMessages.discordId)
 ])
 
 export const faqs = pgTable('faqs', {
@@ -147,19 +152,19 @@ export const automaticErrors = pgTable('automatic_errors', {
 ])
 
 export const supportDataPoints = pgTable('support_data_points', {
-  id: serial('id').primaryKey(),
-  key: varchar('key', { length: 100 }).notNull().unique(),
-  question: text('question').notNull(),
-  priority: integer('priority').notNull(),
-  possibleValues: jsonb('possible_values').$type<string[]>().notNull()
+	id: serial('id').primaryKey(),
+	key: varchar('key', { length: 100 }).notNull().unique(),
+	question: text('question').notNull(),
+	priority: integer('priority').notNull(),
+	possibleValues: jsonb('possible_values').$type<string[]>().notNull()
 })
 
 export const supportMatchers = pgTable('support_matchers', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 200 }).notNull(),
-  conditions: jsonb('conditions').$type<Record<string, string[]>>().notNull(),
-  solution: text('solution').notNull(),
-  priority: integer('priority').default(100).notNull()
+	id: serial('id').primaryKey(),
+	name: varchar('name', { length: 200 }).notNull(),
+	conditions: jsonb('conditions').$type<Record<string, string[]>>().notNull(),
+	solution: text('solution').notNull(),
+	priority: integer('priority').default(100).notNull()
 })
 
 export const tickets = pgTable('tickets', {

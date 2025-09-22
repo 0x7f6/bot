@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/node"
 import * as customid from "@/globals/customid"
 import logger from "@/globals/logger"
 import database from "@/globals/database"
-import openTicketButton from "@/bot/buttons/tickets/open"
 import { eq } from "drizzle-orm"
 import env from "@/globals/env"
 
@@ -44,7 +43,7 @@ function parseOptions(options: (AutocompleteInteraction | ChatInputCommandIntera
 	return output
 }
 
-client.on('interactionCreate', async(interaction) => {
+client.on('interactionCreate', async (interaction) => {
 	if (!interaction.guild) return
 
 	const startTime = performance.now()
@@ -153,7 +152,7 @@ client.on('interactionCreate', async(interaction) => {
 		let decoded = await customid.decode(interaction.client.user.id.concat(interaction.guildId), interaction.customId)
 		if (!decoded) decoded = interaction.customId
 
-		const [ name, ...args ] = decoded.split('°').filter(Boolean)
+		const [name, ...args] = decoded.split('°').filter(Boolean)
 
 		const button = buttons.find((button) => button['m_name'] === name)
 		if (!button) return
@@ -207,8 +206,8 @@ client.on('interactionCreate', async(interaction) => {
 		const decoded = await customid.decode(interaction.client.user.id.concat(interaction.guildId), interaction.customId)
 		if (!decoded) return
 
-		const [ modalRawArgs, listenerRawArgs ] = decoded.split('^')
-		const [ name, ...modalArgs ] = modalRawArgs.split('°').filter(Boolean)
+		const [modalRawArgs, listenerRawArgs] = decoded.split('^')
+		const [name, ...modalArgs] = modalRawArgs.split('°').filter(Boolean)
 		const listenerArgs = listenerRawArgs.split('°').filter(Boolean)
 
 		const modal = modals.find((modal) => modal['m_name'] === name)
@@ -263,7 +262,7 @@ client.on('interactionCreate', async(interaction) => {
 		const decoded = await customid.decode(interaction.client.user.id, interaction.customId)
 		if (!decoded) return
 
-		const [ name, ...listenerArgs ] = decoded.split('°').filter(Boolean)
+		const [name, ...listenerArgs] = decoded.split('°').filter(Boolean)
 
 		const select = selects.find((select) => select['m_name'] === name)
 		if (!select) return
@@ -314,15 +313,15 @@ client.on('interactionCreate', async(interaction) => {
 
 async function main() {
 	await Promise.all([
-		Promise.all([ ...filesystem.getFiles(`${__dirname}/events`, { recursive: true }).filter((file) => file.endsWith('js')).map(async(file) => events.push((await import(file)).default.default)) ]),
-		Promise.all([ ...filesystem.getFiles(`${__dirname}/commands`, { recursive: true }).filter((file) => file.endsWith('js')).map(async(file) => commands.push((await import(file)).default.default)) ]),
-		Promise.all([ ...filesystem.getFiles(`${__dirname}/buttons`, { recursive: true }).filter((file) => file.endsWith('js')).map(async(file) => buttons.push((await import(file)).default.default)) ]),
-		Promise.all([ ...filesystem.getFiles(`${__dirname}/modals`, { recursive: true }).filter((file) => file.endsWith('js')).map(async(file) => modals.push((await import(file)).default.default)) ]),
-		Promise.all([ ...filesystem.getFiles(`${__dirname}/selects`, { recursive: true }).filter((file) => file.endsWith('js')).map(async(file) => selects.push((await import(file)).default.default)) ])
+		Promise.all([...filesystem.getFiles(`${__dirname}/events`, { recursive: true }).filter((file) => file.endsWith('js')).map(async (file) => events.push((await import(file)).default.default))]),
+		Promise.all([...filesystem.getFiles(`${__dirname}/commands`, { recursive: true }).filter((file) => file.endsWith('js')).map(async (file) => commands.push((await import(file)).default.default))]),
+		Promise.all([...filesystem.getFiles(`${__dirname}/buttons`, { recursive: true }).filter((file) => file.endsWith('js')).map(async (file) => buttons.push((await import(file)).default.default))]),
+		Promise.all([...filesystem.getFiles(`${__dirname}/modals`, { recursive: true }).filter((file) => file.endsWith('js')).map(async (file) => modals.push((await import(file)).default.default))]),
+		Promise.all([...filesystem.getFiles(`${__dirname}/selects`, { recursive: true }).filter((file) => file.endsWith('js')).map(async (file) => selects.push((await import(file)).default.default))])
 	])
 
 	for (const event of events) {
-		client.on(event['event'] as any, async(interaction, ...rest) => {
+		client.on(event['event'] as any, async (interaction, ...rest) => {
 			const scope = new Sentry.Scope()
 
 			scope
@@ -359,7 +358,7 @@ async function main() {
 		})
 	}
 
-	await client.login(env.BOT_TOKEN).then(async() => {
+	await client.login(env.BOT_TOKEN).then(async () => {
 		await client.application?.commands.set(commands.map((command) => command['builder'].toJSON()))
 
 		logger()

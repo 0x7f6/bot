@@ -5,7 +5,7 @@ import closeTicket from "@/bot/buttons/tickets/close"
 
 export default new Button()
 	.setName('ticket-force-open')
-	.listen(async(ctx, rawData: number[], logs: string) => {
+	.listen(async (ctx, rawData: number[], logs: string) => {
 		const data = ctx.support.expandData(rawData)
 
 		const existingTicket = await ctx.database.select({

@@ -4,7 +4,7 @@ import productSelect from "@/bot/selects/tickets/product"
 
 export default new Button()
 	.setName('ticket-open')
-	.listen(async(ctx) => {
+	.listen(async (ctx) => {
 		const products = await ctx.database.select({
 			name: ctx.database.schema.products.name,
 			identifier: ctx.database.schema.products.identifier

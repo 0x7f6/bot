@@ -3,6 +3,7 @@ import database from "@/globals/database"
 import * as proxmox from "@/globals/proxmox"
 import getVersion from "@/index"
 import * as pterodactyl from "@/globals/pterodactyl"
+import { client } from "@/bot"
 
 export const runContext = {
 	/**
@@ -17,6 +18,10 @@ export const runContext = {
 	 * The Pterodactyl API Client
 	 * @since 1.1.0
 	*/ pterodactyl,
+	/**
+	 * The Discord Client
+	 * @since 1.15.1
+	*/ client,
 	/**
 	 * The Proxmox API Client
 	 * @since 1.15.0

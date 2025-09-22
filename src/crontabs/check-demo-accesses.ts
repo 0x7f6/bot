@@ -1,4 +1,3 @@
-import { client } from "@/bot"
 import Crontab from "@/crontab"
 import env from "@/globals/env"
 import logger from "@/globals/logger"
@@ -7,7 +6,7 @@ import { and, eq, sql } from "drizzle-orm"
 
 export default new Crontab()
 	.cron('* * * * *')
-	.listen(async(ctx) => {
+	.listen(async (ctx) => {
 		const expiredDemoAccesses = await ctx.database.select({
 			id: ctx.database.schema.demoAccesses.id,
 			discordId: ctx.database.schema.demoAccesses.discordId
@@ -26,7 +25,7 @@ export default new Crontab()
 			.info()
 
 		for (const expiredDemoAccess of expiredDemoAccesses) {
-			const member = await client.guilds.fetch(env.DISCORD_SERVER)
+			const member = await ctx.client.guilds.fetch(env.DISCORD_SERVER)
 				.then((guild) => guild
 					.members.fetch(expiredDemoAccess.discordId)
 				)
@@ -50,7 +49,7 @@ export default new Crontab()
 			await Promise.allSettled([
 				member.roles.remove(env.DEMO_ROLE),
 				member.send('`🔍` Your **1 hour** demo acccess has expired.'),
-				client.guilds.cache.get(env.DISCORD_SERVER)!.channels.fetch(env.DEMO_CHANNEL)
+				ctx.client.guilds.cache.get(env.DISCORD_SERVER)!.channels.fetch(env.DEMO_CHANNEL)
 					.then((channel) => 'send' in channel!
 						? channel.send({ content: `\`🔍\` <@${member.id}>'s demo acccess has expired.`, allowedMentions: { users: [] } })
 						: null

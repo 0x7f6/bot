@@ -162,6 +162,13 @@
       "when": 1745950085094,
       "tag": "0022_noisy_captain_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1758538446686,
+      "tag": "0023_empty_quasimodo",
+      "breakpoints": true
     }
   ]
 }

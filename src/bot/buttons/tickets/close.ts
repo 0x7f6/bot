@@ -7,7 +7,7 @@ import { size, string } from "@rjweb/utils"
 
 export default new Button()
 	.setName('ticket-close')
-	.listen(async(ctx) => {
+	.listen(async (ctx) => {
 		const ticket = await ctx.database.select({
 			id: ctx.database.schema.tickets.id,
 			discordId: ctx.database.schema.tickets.discordId

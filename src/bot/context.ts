@@ -55,14 +55,14 @@ export default class Context<Interaction extends any> {
 			: direction === 'back'
 				? page - 1
 				: direction === 'next'
-				? page + 1
-				: page
+					? page + 1
+					: page
 
 		const c = await Promise.resolve(count)
 		if (direction === 'last') page = Math.ceil((c || 1) / itemsPerPage)
 		else page = page > Math.ceil((c || 1) / itemsPerPage) ? Math.ceil((c || 1) / itemsPerPage) : page
 
-		return [ page, c, await Promise.resolve(data({ take: itemsPerPage, skip: (page - 1) * itemsPerPage })) ]
+		return [page, c, await Promise.resolve(data({ take: itemsPerPage, skip: (page - 1) * itemsPerPage }))]
 	}
 
 	/**
