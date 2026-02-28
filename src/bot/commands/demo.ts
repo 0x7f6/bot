@@ -108,7 +108,7 @@ export default new Command()
 		])
 
 		let attempts = 0
-		while (attempts > 10) {
+		while (attempts < 10) {
 			await time.wait(time(1).s())
 
 			try {
