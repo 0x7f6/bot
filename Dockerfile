@@ -1,5 +1,5 @@
 # builder for server
-FROM node:22-bookworm-slim as builder-server
+FROM node:24-bookworm-slim as builder-server
 LABEL author="Robert Jansen" maintainer="rjansengd@gmail.com"
 
 USER root
@@ -25,7 +25,7 @@ RUN cd /app/server && \
     pnpm prune --prod
 
 # runner
-FROM node:22-bookworm-slim as runner
+FROM node:24-bookworm-slim as runner
 LABEL author="Robert Jansen" maintainer="rjansengd@gmail.com"
 
 USER root
