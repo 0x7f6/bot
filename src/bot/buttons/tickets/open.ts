@@ -12,6 +12,7 @@ export default new Button()
 			.from(ctx.database.schema.products)
 
 		return ctx.interaction.reply({
+			content: "### PLEASE READ EVERYTHING, YOU ARE MISSING IMPORTANT DETAILS.",
 			embeds: [
 				ctx.Embed()
 					.setTitle('`⚒️` Open Ticket')
