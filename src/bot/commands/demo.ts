@@ -108,15 +108,18 @@ export default new Command()
 		])
 
 		let attempts = 0
-		while (attempts < 10) {
+		while (attempts < 20) {
 			await time.wait(time(1).s())
 
-			try {
+			const isOnline = await ctx.pterodactyl.testConnection(ip)
+			if (isOnline) {
+				await time.wait(time(500).ms())
+
 				await ctx.pterodactyl.createUser(ip, ctx.interaction.user, password)
 				break
-			} catch {
-				attempts++
 			}
+
+			attempts++
 		}
 
 		return ctx.interaction.editReply(ctx.join(

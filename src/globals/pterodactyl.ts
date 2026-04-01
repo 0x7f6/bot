@@ -11,6 +11,24 @@ import { network } from "@rjweb/utils"
 }
 
 /**
+ * Test the connection to the Pterodactyl panel
+ * @since 1.15.1
+*/ export async function testConnection(ip: network.IPAddress<4>): Promise<boolean> {
+	try {
+		await axios.get(`${url(env.PTERO_URL, ip)}/api/application/servers`, {
+			headers: {
+				Authorization: `Bearer ${env.PTERO_ADMIN_TOKEN}`,
+				Accept: 'application/json'
+			}
+		})
+
+		return true
+	} catch {
+		return false
+	}
+}
+
+/**
  * Create a new User
  * @since 1.1.0
 */ export async function createUser(ip: network.IPAddress<4>, user: User, password: string): Promise<number> {
