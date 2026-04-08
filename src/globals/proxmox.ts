@@ -8,7 +8,7 @@ const agent = new Agent({
 	}
 })
 
-export const client = proxmoxApi({
+export const getClient = () => proxmoxApi({
 	host: env.PROXMOX_HOST,
 	fetch: (url, options) => fetch(url, {
 		...options,

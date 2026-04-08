@@ -82,7 +82,9 @@ export default new Command()
 		const macStr = mac.map((e) => e.toString(16).padStart(2, '0')).join(':')
 		const lxcId = 10000 + ip.rawData[3]
 
-		await ctx.proxmox.client.nodes.$(ctx.env.PROXMOX_NODE).lxc.$post({
+		const proxmoxClient = ctx.proxmox.getClient()
+
+		await proxmoxClient.nodes.$(ctx.env.PROXMOX_NODE).lxc.$post({
 			vmid: lxcId,
 			hostname: `demo-panel-${demoAccess.id}`,
 			description: `Demo account for @${ctx.interaction.user.username} (${ctx.interaction.user.id})`,
@@ -96,7 +98,7 @@ export default new Command()
 			net0: `name=eth0,bridge=${ctx.env.PROXMOX_BRIDGE},firewall=1,gw=${ctx.env.PROXMOX_NET_GATEWAY},hwaddr=${macStr},ip=${ip}/${ctx.env.PROXMOX_NET_IP.netmask},type=veth`,
 		})
 
-		while (await ctx.proxmox.client.nodes.$(ctx.env.PROXMOX_NODE).lxc.$(lxcId).status.current.$get().then((e) => e.lock)) {
+		while (await proxmoxClient.nodes.$(ctx.env.PROXMOX_NODE).lxc.$(lxcId).status.current.$get().then((e) => e.lock)) {
 			await time.wait(time(1).s())
 		}
 
