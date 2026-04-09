@@ -19,7 +19,8 @@ import { network } from "@rjweb/utils"
 			headers: {
 				Authorization: `Bearer ${env.PTERO_ADMIN_TOKEN}`,
 				Accept: 'application/json'
-			}
+			},
+			validateStatus: (status) => status >= 200 && status < 300
 		})
 
 		return true
