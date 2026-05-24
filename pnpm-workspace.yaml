@@ -1,2 +1,9 @@
 onlyBuiltDependencies:
   - discord-html-transcripts
+allowBuilds:
+  bufferutil: true
+  discord-html-transcripts: true
+  esbuild: true
+  tesseract.js: true
+  utf-8-validate: true
+  zlib-sync: true

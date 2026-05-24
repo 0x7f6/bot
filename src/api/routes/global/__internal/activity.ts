@@ -12,7 +12,7 @@ export = new globalAPIRouter.Path('/')
 			const [ data, error ] = await ctr.bindBody((z) => z.object({
 				id: z.string(),
 				event: z.string(),
-				properties: z.record(z.any()).transform((v) => Object.fromEntries(Object.entries(v).filter(([ k ]) => k !== '_token'))),
+				properties: z.record(z.string(), z.any()).transform((v) => Object.fromEntries(Object.entries(v).filter(([ k ]) => k !== '_token'))),
 				timestamp: z.string().transform((v) => new Date(v)),
 				actor: z.string().email(),
 				server: z.object({
