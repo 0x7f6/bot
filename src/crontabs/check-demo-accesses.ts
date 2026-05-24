@@ -30,6 +30,7 @@ export default new Crontab()
 				.then((guild) => guild
 					.members.fetch(expiredDemoAccess.discordId)
 				)
+				.catch(() => null)
 
 			const ip = ctx.proxmox.getIP(expiredDemoAccess.id)
 			const lxcId = 10000 + ip.rawData[3]
@@ -50,11 +51,11 @@ export default new Crontab()
 			])
 
 			await Promise.allSettled([
-				member.roles.remove(env.DEMO_ROLE),
-				member.send('`🔍` Your **1 hour** demo acccess has expired.'),
+				member?.roles.remove(env.DEMO_ROLE),
+				member?.send('`🔍` Your **1 hour** demo acccess has expired.'),
 				client.guilds.cache.get(env.DISCORD_SERVER)!.channels.fetch(env.DEMO_CHANNEL)
 					.then((channel) => 'send' in channel!
-						? channel.send({ content: `\`🔍\` <@${member.id}>'s demo acccess has expired.`, allowedMentions: { users: [] } })
+						? channel.send({ content: `\`🔍\` <@${expiredDemoAccess.discordId}>'s demo acccess has expired.`, allowedMentions: { users: [] } })
 						: null
 					)
 			])
