@@ -11,6 +11,7 @@ RUN npm i -g pnpm --force
 
 COPY ./package.json /app/server/package.json
 COPY ./pnpm-lock.yaml /app/server/pnpm-lock.yaml
+COPY ./pnpm-workspace.yaml /app/server/pnpm-workspace.yaml
 
 RUN cd /app/server && \
     pnpm install --frozen-lockfile

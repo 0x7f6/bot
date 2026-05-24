@@ -1,5 +1,5 @@
 {
-  "version": "1.15.1",
+  "version": "1.16.0",
   "license": "UNLICENSED",
   "scripts": {
     "build": "rm -rf lib && esbuild `find src \\( -name '*.ts' -o -name '*.tsx' \\)` --platform='node' --sourcemap --ignore-annotations --format='cjs' --target='es2022' --outdir='lib' && esbuild src/index.ts --platform='node' --sourcemap --ignore-annotations --format='cjs' --target='es2022' --outdir='lib' --banner:js='require(\"module-alias\").addAlias(\"@\", __dirname);'",
@@ -17,7 +17,7 @@
     "axios": "^1.16.1",
     "discord-html-transcripts": "github:0x7d8/discord-html-transcripts#eb818bc",
     "discord.js": "^14.26.4",
-    "drizzle-orm": "^0.42.0",
+    "drizzle-orm": "^0.45.2",
     "ioredis": "^5.10.1",
     "module-alias": "^2.3.4",
     "node-cron": "^4.2.1",
@@ -25,7 +25,7 @@
     "proxmox-api": "^1.1.1",
     "rjweb-server": "^9.9.0",
     "tesseract.js": "^7.0.0",
-    "undici": "6.21.3",
+    "undici": "^6.25.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
