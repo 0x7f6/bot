@@ -55,6 +55,10 @@ export default new Button()
 			]
 		})
 
+		if (data.software) {
+			data.software = ctx.database.properCaseSoftware(data.software as typeof ctx.database.schema.productSoftware.enumValues[number])
+		}
+
 		if (data.addon) {
 			const addon = await ctx.database.select({ name: ctx.database.schema.products.name })
 				.from(ctx.database.schema.products)

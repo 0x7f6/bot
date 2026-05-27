@@ -22,7 +22,7 @@ export default new Select()
 
 		return builder
 	})
-	.listen(async(ctx) => {
+	.listen(async(ctx, initialData: number[]) => {
 		const product = ctx.interaction.values[0] === 'none' ? null : await ctx.database.select({
 			id: ctx.database.schema.products.id,
 			name: ctx.database.schema.products.name
@@ -33,13 +33,19 @@ export default new Select()
 			.then((r) => r[0])
 
 		if (product) {
-			return ctx.interaction.showModal(await ticketsVersionModal(ctx.interaction, [], [product]))
+			return ctx.interaction.showModal(await ticketsVersionModal(ctx.interaction, [], [product, initialData]))
 		}
 
-		const data = await ctx.database.select()
+		const expandedInitial = ctx.support.expandData(initialData)
+
+		const firstDataPoint = await ctx.database.select()
 			.from(ctx.database.schema.supportDataPoints)
 			.where(eq(ctx.database.schema.supportDataPoints.priority, 0))
 			.then((r) => r[0])
+
+		const question = firstDataPoint.key in expandedInitial
+			? ctx.support.nextQuestion(expandedInitial) ?? firstDataPoint
+			: firstDataPoint
 
 		return ctx.interaction.update({
 			embeds: [
@@ -49,12 +55,12 @@ export default new Select()
 						'Before we open a ticket, we will ask you some questions in hopes of you finding the solution to your problem.',
 						'',
 						'> **Question**',
-						`> ${data.question}`
+						`> ${question.question}`
 					))
 			], components: [
 				new ActionRowBuilder()
 					.addComponents(
-						diagnosisSelect(ctx, [data.possibleValues], [[], data.id, ''])
+						diagnosisSelect(ctx, [question.possibleValues], [initialData, question.id, ''])
 					) as any
 			]
 		})

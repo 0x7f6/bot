@@ -20,7 +20,7 @@ export default new Modal()
 			])
 		)
 	)
-	.listen(async(ctx, product: { id: number, name: string }) => {
+	.listen(async(ctx, product: { id: number, name: string }, initialData: number[]) => {
 		if (!ctx.interaction.guild || !ctx.interaction.isFromMessage()) return
 
 		const version = ctx.interaction.fields.getTextInputValue('version').trim()
@@ -35,6 +35,40 @@ export default new Modal()
 			})
 		}
 
+		const latest = await ctx.database.select({
+			version: ctx.database.schema.products.version,
+			software: ctx.database.schema.products.software,
+			productProvider: ctx.database.schema.productProviders.provider,
+			productProviderLink: ctx.database.schema.productProviders.link
+		})
+			.from(ctx.database.schema.products)
+			.innerJoin(ctx.database.schema.productProviders, eq(ctx.database.schema.products.id, ctx.database.schema.productProviders.productId))
+			.where(eq(ctx.database.schema.products.id, product.id))
+
+		const logCommand = (() => {
+			switch (latest[0].software) {
+				case 'PTERODACTYL': return ctx.join(
+					'Please run the following command in the pterodactyl directory:',
+					'-# usually `/var/www/pterodactyl`',
+					'```bash',
+					'tail -n 500 storage/logs/$(ls -t storage/logs/laravel-*.log | head -n1 | xargs basename) | curl -T - https://api.pastes.dev/post',
+					'```'
+				)
+
+				case 'CALAGOPUS': return ctx.join(
+					'Please run the following command in the directory where calagopus is installed:',
+					'```bash',
+					'docker compose logs --tail=500 --no-color --timestamps | curl -T - https://api.pastes.dev/post',
+					'```',
+					'',
+					'If you are not using docker, please run the following command instead:',
+					'```bash',
+					'calagopus-panel diagnostics --log-lines 500',
+					'```'
+				)
+			}
+		})()
+
 		await ctx.interaction.update({
 			embeds: [
 				ctx.Embed()
@@ -42,11 +76,7 @@ export default new Modal()
 					.setDescription(ctx.join(
 						'> Before we open a ticket, we will ask you some questions in hopes of you finding the solution to your problem.',
 						'',
-						'Please run the following command in the pterodactyl directory:',
-						'-# usually `/var/www/pterodactyl`',
-						'```bash',
-						'tail -n 500 storage/logs/$(ls -t storage/logs/laravel-*.log | head -n1 | xargs basename) | curl -T - https://api.pastes.dev/post',
-						'```'
+						logCommand
 					))
 			], components: [
 				new ActionRowBuilder()
@@ -65,19 +95,10 @@ export default new Modal()
 							.setLabel('Self-Diagnosis')
 							.setStyle(ButtonStyle.Primary)
 							.setEmoji('1150889684227076227')
-							.setCustomId(diagnosisButton(ctx.interaction, product.id))
+							.setCustomId(diagnosisButton(ctx.interaction, product.id, initialData))
 					) as any
 			]
 		})
-
-		const latest = await ctx.database.select({
-			version: ctx.database.schema.products.version,
-			productProvider: ctx.database.schema.productProviders.provider,
-			productProviderLink: ctx.database.schema.productProviders.link
-		})
-			.from(ctx.database.schema.products)
-			.innerJoin(ctx.database.schema.productProviders, eq(ctx.database.schema.products.id, ctx.database.schema.productProviders.productId))
-			.where(eq(ctx.database.schema.products.id, product.id))
 
 		if (latest[0].version !== version) {
 			return ctx.interaction.followUp({

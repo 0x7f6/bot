@@ -22,7 +22,7 @@ export default new Modal()
 			])
 		)
 	)
-	.listen(async(ctx, product: { id: number, name: string } | null) => {
+	.listen(async(ctx, product: { id: number, name: string } | null, initialData: number[]) => {
 		if (!ctx.interaction.guild || !ctx.interaction.isFromMessage()) return
 
 		const url = ctx.interaction.fields.getTextInputValue('log_url')
@@ -41,10 +41,17 @@ export default new Modal()
 			maxContentLength: size(2.5).mb()
 		}).catch(() => null)
 
-		const data = await ctx.database.select()
+		const mergedData = ctx.support.compactData({ ...ctx.support.expandData(initialData), addon: product?.id.toString() })
+		const expandedMerged = ctx.support.expandData(mergedData)
+
+		const firstDataPoint = await ctx.database.select()
 			.from(ctx.database.schema.supportDataPoints)
 			.where(eq(ctx.database.schema.supportDataPoints.priority, 0))
 			.then((r) => r[0])
+
+		const question = firstDataPoint.key in expandedMerged
+			? ctx.support.nextQuestion(expandedMerged) ?? firstDataPoint
+			: firstDataPoint
 
 		await ctx.interaction.update({
 			embeds: [
@@ -54,12 +61,12 @@ export default new Modal()
 						'Before we open a ticket, we will ask you some questions in hopes of you finding the solution to your problem.',
 						'',
 						'> **Question**',
-						`> ${data.question}`
+						`> ${question.question}`
 					))
 			], components: [
 				new ActionRowBuilder()
 					.addComponents(
-						diagnosisSelect(ctx, [data.possibleValues], [ctx.support.compactData({ addon: product?.id.toString() }), data.id, url.slice(-10)])
+						diagnosisSelect(ctx, [question.possibleValues], [mergedData, question.id, url.slice(-10)])
 					) as any
 			]
 		})
