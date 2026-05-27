@@ -2,12 +2,14 @@ import { sql } from "drizzle-orm"
 import { boolean, char, decimal, text, integer, pgEnum, pgTable, serial, timestamp, time, uniqueIndex, varchar, index, jsonb, uuid, smallint, smallserial } from "drizzle-orm/pg-core"
 
 export const productProvider = pgEnum('productProvider', ['SOURCEXCHANGE', 'BUILTBYBIT'])
+export const productSoftware = pgEnum('productSoftware', ['PTERODACTYL', 'CALAGOPUS'])
 export const currency = pgEnum('currency', ['EUR', 'USD'])
 
 export const products = pgTable('products', {
   id: serial('id').primaryKey(),
 
 	name: varchar('name', { length: 51 }).notNull(),
+	software: productSoftware('software').default('PTERODACTYL').notNull(),
 	icon: varchar('icon', { length: 255 }).notNull(),
 	banner: varchar('banner', { length: 255 }).notNull(),
 	summary: varchar('summary', { length: 255 }).notNull(),
@@ -18,7 +20,9 @@ export const products = pgTable('products', {
 }, (products) => [
 	uniqueIndex('products_name_idx').on(products.name),
 	uniqueIndex('products_identifier_idx').on(products.identifier),
-	uniqueIndex('products_role_idx').on(products.role)
+	uniqueIndex('products_role_idx').on(products.role),
+
+	index('products_software_idx').on(products.software)
 ])
 
 export const productProviders = pgTable('product_providers', {

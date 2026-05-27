@@ -1,5 +1,5 @@
 import Command from "@/bot/command"
-import { and, count, eq, ilike } from "drizzle-orm"
+import { and, count, eq, ilike, inArray } from "drizzle-orm"
 import productsButton from "@/bot/buttons/products"
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionContextType, MessageFlags } from "discord.js"
 import linkSourcexchangeButton from "@/bot/buttons/link/sourcexchange"
@@ -15,6 +15,15 @@ export default new Command()
 			.addSubcommand((command) => command
 				.setName('all')
 				.setDescription('List all products')
+				.addStringOption((option) => option
+					.setName('software')
+					.setDescription('Filter by software')
+					.addChoices(
+						{ name: 'Pterodactyl', value: 'PTERODACTYL' },
+						{ name: 'Calagopus', value: 'CALAGOPUS' }
+					)
+					.setRequired(false)
+				)
 			)
 			.addSubcommand((command) => command
 				.setName('linked')
@@ -22,6 +31,15 @@ export default new Command()
 				.addUserOption((option) => option
 					.setName('user')
 					.setDescription('The user to list linked products of')
+					.setRequired(false)
+				)
+				.addStringOption((option) => option
+					.setName('software')
+					.setDescription('Filter by software')
+					.addChoices(
+						{ name: 'Pterodactyl', value: 'PTERODACTYL' },
+						{ name: 'Calagopus', value: 'CALAGOPUS' }
+					)
 					.setRequired(false)
 				)
 			)
@@ -139,6 +157,9 @@ export default new Command()
 			}
 
 			case "list": {
+				const softwareFilter = ctx.interaction.options.getString('software') as typeof ctx.database.schema.productSoftware.enumValues[number] | null
+				const allowedSoftware = (softwareFilter ? [softwareFilter] : ['PTERODACTYL', 'CALAGOPUS']) as typeof ctx.database.schema.productSoftware.enumValues[number][]
+
 				switch (ctx.interaction.options.getSubcommand()) {
 					case "all": {
 						const [ products, total ] = await Promise.all([
@@ -154,17 +175,20 @@ export default new Command()
 								link: ctx.database.schema.productProviders.link
 							}).from(ctx.database.schema.products)
 								.leftJoin(ctx.database.schema.productProviders, eq(ctx.database.schema.products.id, ctx.database.schema.productProviders.productId))
+								.where(inArray(ctx.database.schema.products.software, allowedSoftware))
 								.orderBy(ctx.database.schema.products.id)
 								.limit(ctx.database.schema.productProvider.enumValues.length),
 							ctx.database.select({
 								count: count(ctx.database.schema.products.id)
-							}).from(ctx.database.schema.products).then((r) => r[0].count)
+							}).from(ctx.database.schema.products)
+								.where(inArray(ctx.database.schema.products.software, allowedSoftware))
+								.then((r) => r[0].count)
 						])
 
 						return ctx.interaction.reply({
 							embeds: [
 								ctx.Embed()
-									.setTitle('`📦` Products')
+									.setTitle(softwareFilter ? `\`📦\` ${ctx.database.properCaseSoftware(softwareFilter)} Products` : '`📦` Products')
 									.setImage(products[0].banner)
 									.setThumbnail(products[0].icon)
 									.setDescription(ctx.join(
@@ -177,7 +201,7 @@ export default new Command()
 										)
 									))
 									.setFooter({ text: `${total} Products` })
-							], components: ctx.paginateButtons(1, total, (type) => productsButton(ctx.interaction, null, 1, type), 1)
+							], components: ctx.paginateButtons(1, total, (type) => productsButton(ctx.interaction, allowedSoftware, null, 1, type), 1)
 						})
 					}
 
@@ -194,19 +218,27 @@ export default new Command()
 								version: ctx.database.schema.products.version
 							}).from(ctx.database.schema.products)
 								.leftJoin(ctx.database.schema.productLinks, eq(ctx.database.schema.products.id, ctx.database.schema.productLinks.productId))
-								.where(eq(ctx.database.schema.productLinks.discordId, user.id))
+								.where(and(
+									eq(ctx.database.schema.productLinks.discordId, user.id),
+									inArray(ctx.database.schema.products.software, allowedSoftware)
+								))
 								.orderBy(ctx.database.schema.products.id)
 								.limit(1),
 							ctx.database.selectDistinct({
 								count: count(ctx.database.schema.products.id)
 							}).from(ctx.database.schema.products)
 								.leftJoin(ctx.database.schema.productLinks, eq(ctx.database.schema.products.id, ctx.database.schema.productLinks.productId))
-								.where(eq(ctx.database.schema.productLinks.discordId, user.id))
+								.where(and(
+									eq(ctx.database.schema.productLinks.discordId, user.id),
+									inArray(ctx.database.schema.products.software, allowedSoftware)
+								))
 								.then((r) => r[0]?.count ?? 0)
 						])
 
 						if (total < 1) return ctx.interaction.reply({
-							content: '`🔗` No Products linked.',
+							content: softwareFilter
+								? `\`🔗\` No ${ctx.database.properCaseSoftware(softwareFilter)} Products linked.`
+								: '`🔗` No Products linked.',
 							flags: [
 								MessageFlags.Ephemeral
 							]
@@ -215,7 +247,11 @@ export default new Command()
 						return ctx.interaction.reply({
 							embeds: [
 								ctx.Embed()
-									.setTitle(`\`📦\` Linked Products ${user.id !== ctx.interaction.user.id ? `(of \`${user.username}\`)` : ''}`.trim())
+									.setTitle(
+										softwareFilter
+											? `\`📦\` Linked ${ctx.database.properCaseSoftware(softwareFilter)} Products ${user.id !== ctx.interaction.user.id ? `(of \`${user.username}\`)` : ''}`.trim()
+											: `\`📦\` Linked Products ${user.id !== ctx.interaction.user.id ? `(of \`${user.username}\`)` : ''}`.trim()
+									)
 									.setImage(products[0].banner)
 									.setThumbnail(products[0].icon)
 									.setDescription(ctx.join(
@@ -223,7 +259,7 @@ export default new Command()
 										`> \`${products[0].version}\` ${products[0].summary}`
 									))
 									.setFooter({ text: `${total} Products` })
-							], components: ctx.paginateButtons(1, total, (type) => productsButton(ctx.interaction, user.id, 1, type), 1)
+							], components: ctx.paginateButtons(1, total, (type) => productsButton(ctx.interaction, allowedSoftware, user.id, 1, type), 1)
 						})
 					}
 				}

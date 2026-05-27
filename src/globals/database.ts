@@ -37,5 +37,17 @@ export default Object.assign(db, {
 				return "BuiltByBit"
 			}
 		}
+	},
+
+	properCaseSoftware(software: typeof schema.productSoftware.enumValues[number]) {
+		switch (software) {
+			case "PTERODACTYL": {
+				return "Pterodactyl"
+			}
+
+			case "CALAGOPUS": {
+				return "Calagopus"
+			}
+		}
 	}
 })
