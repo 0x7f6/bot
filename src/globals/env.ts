@@ -38,6 +38,11 @@ const infos = z.object({
 	PTERO_ADMIN_TOKEN: z.string(),
 	PTERO_CLIENT_TOKEN: z.string(),
 
+	CALAGOPUS_URL: z.string(),
+	CALAGOPUS_THEME_URLS: z.string().transform((v) => string.kv(v, null, ',', '=')).optional(),
+	CALAGOPUS_DEMO_SERVERS: z.string().transform((v) => v.split(',')),
+	CALAGOPUS_TOKEN: z.string(),
+
 	S3_URL: z.string().optional(),
 	S3_SSL: z.union([ z.literal('true'), z.literal('false') ]).transform((str) => str === 'true').default(true),
 	S3_BUCKET: z.string().optional(),

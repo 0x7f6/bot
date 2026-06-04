@@ -7,6 +7,7 @@ import cache from "@/globals/cache"
 import * as sourcexchange from "@/globals/sourcexchange"
 import * as builtbybit from "@/globals/builtbybit"
 import * as pterodactyl from "@/globals/pterodactyl"
+import * as calagopus from "@/globals/calagopus"
 import * as support from "@/globals/support"
 import * as proxmox from "@/globals/proxmox"
 import s3 from "@/globals/s3"
@@ -150,6 +151,10 @@ export default class Context<Interaction extends any> {
 	 * The Pterodactyl API Client
 	 * @since 1.1.0
 	*/ public pterodactyl = pterodactyl
+	/** 
+	 * The Calagopus API Client
+	 * @since 1.17.0
+	*/ public calagopus = calagopus
 	/**
 	 * Support Utilities
 	 * @since 1.12.0

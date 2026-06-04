@@ -27,8 +27,17 @@ export default new Command()
 					'`🔍` You already have an active demo account.',
 					`expires <t:${Math.floor((active.created.getTime() + time(1).h()) / 1000)}:R>`,
 					'',
+					'### Pterodactyl Panel',
 					ctx.pterodactyl.url(ctx.env.PTERO_URL, ip),
 					ctx.env.PTERO_THEME_URLS ? Object.entries(ctx.env.PTERO_THEME_URLS).map(([ name, url ]) => `[${name} Demo](<${ctx.pterodactyl.url(url, ip)}>)`).join(' | ') : null,
+					'```properties',
+					'username: demo',
+					`password: ${active.password}`,
+					'```',
+					'',
+					'### Calagopus Panel',
+					ctx.calagopus.url(ctx.env.CALAGOPUS_URL, ip),
+					ctx.env.CALAGOPUS_THEME_URLS ? Object.entries(ctx.env.CALAGOPUS_THEME_URLS).map(([ name, url ]) => `[${name} Demo](<${ctx.calagopus.url(url, ip)}>)`).join(' | ') : null,
 					'```properties',
 					'username: demo',
 					`password: ${active.password}`,
@@ -109,27 +118,57 @@ export default new Command()
 				.then((channel) => 'send' in channel! ? channel.send(`\`🔍\` <@${ctx.interaction.user.id}>'s demo access has started, it expires <t:${Math.floor((Date.now() + time(1).h()) / 1000)}:R>`) : null)
 		])
 
-		let attempts = 0
-		while (attempts < 20) {
-			await time.wait(time(1).s())
+		const pteroPromise = (async () => {
+			let attempts = 0
+			while (attempts < 20) {
+				await time.wait(time(1).s())
 
-			const isOnline = await ctx.pterodactyl.testConnection(ip)
-			if (isOnline) {
-				await time.wait(time(500).ms())
+				const isOnline = await ctx.pterodactyl.testConnection(ip)
+				if (isOnline) {
+					await time.wait(time(500).ms())
 
-				await ctx.pterodactyl.createUser(ip, ctx.interaction.user, password)
-				break
+					await ctx.pterodactyl.createUser(ip, ctx.interaction.user, password)
+					break
+				}
+
+				attempts++
 			}
+		})()
 
-			attempts++
-		}
+		const calagopusPromise = (async () => {
+			let attempts = 0
+			while (attempts < 20) {
+				await time.wait(time(1).s())
+
+				const isOnline = await ctx.calagopus.testConnection(ip)
+				if (isOnline) {
+					await time.wait(time(500).ms())
+
+					await ctx.calagopus.createUser(ip, ctx.interaction.user, password)
+					break
+				}
+
+				attempts++
+			}
+		})()
+
+		await Promise.all([pteroPromise, calagopusPromise])
 
 		return ctx.interaction.editReply(ctx.join(
 			'`🔍` Demo account created.',
 			`expires <t:${Math.floor((Date.now() + time(1).h()) / 1000)}:R>`,
 			'',
+			'### Pterodactyl Panel',
 			ctx.pterodactyl.url(ctx.env.PTERO_URL, ip),
 			ctx.env.PTERO_THEME_URLS ? Object.entries(ctx.env.PTERO_THEME_URLS).map(([ name, url ]) => `[${name} Demo](<${ctx.pterodactyl.url(url, ip)}>)`).join(' | ') : null,
+			'```properties',
+			'username: demo',
+			`password: ${password}`,
+			'```',
+			'',
+			'### Calagopus Panel',
+			ctx.calagopus.url(ctx.env.CALAGOPUS_URL, ip),
+			ctx.env.CALAGOPUS_THEME_URLS ? Object.entries(ctx.env.CALAGOPUS_THEME_URLS).map(([ name, url ]) => `[${name} Demo](<${ctx.calagopus.url(url, ip)}>)`).join(' | ') : null,
 			'```properties',
 			'username: demo',
 			`password: ${password}`,
