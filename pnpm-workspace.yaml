@@ -2,7 +2,7 @@ onlyBuiltDependencies:
   - discord-html-transcripts
 allowBuilds:
   bufferutil: true
-  discord-html-transcripts: true
+  discord-html-transcripts@https://codeload.github.com/0x7d8/discord-html-transcripts/tar.gz/eb818bc77266f6a296f73511adaef42167ac1da1: true
   esbuild: true
   tesseract.js: true
   utf-8-validate: true
