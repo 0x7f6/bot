@@ -1,5 +1,5 @@
 {
-  "version": "1.17.0",
+  "version": "1.18.0",
   "license": "UNLICENSED",
   "scripts": {
     "build": "rm -rf lib && esbuild `find src \\( -name '*.ts' -o -name '*.tsx' \\)` --platform='node' --sourcemap --ignore-annotations --format='cjs' --target='es2022' --outdir='lib' && esbuild src/index.ts --platform='node' --sourcemap --ignore-annotations --format='cjs' --target='es2022' --outdir='lib' --banner:js='require(\"module-alias\").addAlias(\"@\", __dirname);'",
@@ -8,35 +8,35 @@
     "dev": "pnpm build && cd lib && NODE_ENV=development node --no-deprecation --enable-source-maps index && cd .."
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1053.0",
-    "@rjweb/runtime-node": "^1.1.1",
-    "@rjweb/sentry": "^2.1.5",
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@rjweb/runtime-node": "^1.1.3",
+    "@rjweb/sentry": "^3.0.0",
     "@rjweb/utils": "^1.12.29",
-    "@sentry/node": "^7.120.4",
+    "@sentry/node": "^10.78.0",
     "ansi-colors": "^4.1.3",
-    "axios": "^1.16.1",
+    "axios": "^1.21.0",
     "discord-html-transcripts": "github:0x7d8/discord-html-transcripts#eb818bc",
-    "discord.js": "^14.26.4",
-    "drizzle-orm": "^0.45.2",
-    "ioredis": "^5.10.1",
-    "module-alias": "^2.3.4",
-    "node-cron": "^4.2.1",
-    "pg": "^8.21.0",
+    "discord.js": "^14.28.1",
+    "drizzle-orm": "^0.45.4",
+    "ioredis": "^5.11.1",
+    "module-alias": "^2.3.5",
+    "node-cron": "^4.6.0",
+    "pg": "^8.23.1",
     "proxmox-api": "^1.1.1",
-    "rjweb-server": "^9.9.0",
+    "rjweb-server": "^9.9.1",
     "tesseract.js": "^7.0.0",
-    "undici": "^6.26.0",
-    "zod": "^4.4.3"
+    "undici": "^6.29.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^24.12.4",
-    "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
     "esbuild": "^0.24.2",
     "typescript": "^5.9.3"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.1.0",
+    "bufferutil": "^4.2.0",
     "utf-8-validate": "^6.0.6",
     "zlib-sync": "^0.1.10"
   },

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, DiscordAPIError, EmbedBuilder, GatewayIntentBits, MessageCreateOptions, MessageEditOptions, MessagePayload, version } from "discord.js"
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, DiscordAPIError, Interaction, EmbedBuilder, GatewayIntentBits, MessageCreateOptions, MessageEditOptions, MessagePayload, version } from "discord.js"
 import { filesystem } from "@rjweb/utils"
 import * as Sentry from "@sentry/node"
 import * as customid from "@/globals/customid"
@@ -44,23 +44,20 @@ function parseOptions(options: (AutocompleteInteraction | ChatInputCommandIntera
 	return output
 }
 
-client.on('interactionCreate', async(interaction) => {
-	if (!interaction.guild) return
-
-	const startTime = performance.now()
-
-	const scope = new Sentry.Scope()
-
+client.on('interactionCreate', (interaction) => Sentry.withIsolationScope((scope) => {
 	scope
 		.setLevel('log')
-		.setSpan(Sentry.startTransaction({
-			name: 'interactionCreate'
-		}))
 		.setUser({
 			id: interaction.user.id
 		})
 
-	const transaction = scope.getTransaction()!
+	return Sentry.startSpanManual({ name: 'interactionCreate', forceTransaction: true }, (transaction) => handleInteraction(interaction, scope, transaction))
+}))
+
+async function handleInteraction(interaction: Interaction, scope: Sentry.Scope, transaction: Sentry.Span) {
+	if (!interaction.guild) return
+
+	const startTime = performance.now()
 
 	if (interaction.isChatInputCommand()) {
 		const command = commands.find((command) => command['builder'].name === interaction.commandName)
@@ -69,7 +66,7 @@ client.on('interactionCreate', async(interaction) => {
 		const commandName = [interaction.commandName, interaction.options.getSubcommandGroup(false), interaction.options.getSubcommand(false)].filter(Boolean).join(' '),
 			options = parseOptions(interaction.options)
 
-		transaction.setName(`command {/${commandName}}`)
+		transaction.updateName(`command {/${commandName}}`)
 
 		const context = new Context(interaction, scope)
 		context['startTime'] = startTime
@@ -95,9 +92,9 @@ client.on('interactionCreate', async(interaction) => {
 					content: typeof error === 'string' ? error : '`⚠️` An error occurred while processing the command.'
 				})
 			} catch { }
+		} finally {
+			transaction.end()
 		}
-
-		transaction.finish()
 
 		logger()
 			.text('DISCORD COMMAND', (c) => c.blue)
@@ -114,7 +111,7 @@ client.on('interactionCreate', async(interaction) => {
 		const commandName = [interaction.commandName, interaction.options.getSubcommandGroup(false), interaction.options.getSubcommand(false)].filter(Boolean).join(' '),
 			options = parseOptions(interaction.options)
 
-		transaction.setName(`autocomplete {/${commandName}}`)
+		transaction.updateName(`autocomplete {/${commandName}}`)
 		transaction.setAttributes({
 			options: JSON.stringify(options)
 		})
@@ -136,7 +133,7 @@ client.on('interactionCreate', async(interaction) => {
 
 			Sentry.captureException(error, scope)
 		} finally {
-			transaction.finish()
+			transaction.end()
 		}
 
 		logger()
@@ -160,7 +157,7 @@ client.on('interactionCreate', async(interaction) => {
 
 		const options = args.map((arg) => JSON.parse(arg.replace(/%C2%B0|%5E/g, (c) => decodeURIComponent(c))))
 
-		transaction.setName(`button {${button['m_name']}}`)
+		transaction.updateName(`button {${button['m_name']}}`)
 		transaction.setAttributes({
 			options: JSON.stringify(options)
 		})
@@ -190,7 +187,7 @@ client.on('interactionCreate', async(interaction) => {
 				})
 			} catch { }
 		} finally {
-			transaction.finish()
+			transaction.end()
 		}
 
 		logger()
@@ -217,7 +214,7 @@ client.on('interactionCreate', async(interaction) => {
 		const modalOptions = modalArgs.map((arg) => JSON.parse(arg.replace(/%C2%B0|%5E/g, (c) => decodeURIComponent(c)))),
 			listenerOptions = listenerArgs.map((arg) => JSON.parse(arg.replace(/%C2%B0|%5E/g, (c) => decodeURIComponent(c))))
 
-		transaction.setName(`modal {${modal['m_name']}}`)
+		transaction.updateName(`modal {${modal['m_name']}}`)
 		transaction.setAttributes({
 			modalOptions: JSON.stringify(modalOptions),
 			listenerOptions: JSON.stringify(listenerOptions)
@@ -248,7 +245,7 @@ client.on('interactionCreate', async(interaction) => {
 				})
 			} catch { }
 		} finally {
-			transaction.finish()
+			transaction.end()
 		}
 
 		logger()
@@ -270,7 +267,7 @@ client.on('interactionCreate', async(interaction) => {
 
 		const listenerOptions = listenerArgs.map((arg) => JSON.parse(arg.replace(/%C2%B0|%5E/g, (c) => decodeURIComponent(c))))
 
-		transaction.setName(`select {${select['m_name']}}`)
+		transaction.updateName(`select {${select['m_name']}}`)
 		transaction.setAttributes({
 			listenerOptions: JSON.stringify(listenerOptions)
 		})
@@ -300,7 +297,7 @@ client.on('interactionCreate', async(interaction) => {
 				})
 			} catch { }
 		} finally {
-			transaction.finish()
+			transaction.end()
 		}
 
 		logger()
@@ -310,7 +307,7 @@ client.on('interactionCreate', async(interaction) => {
 			.text(`(${(performance.now() - startTime).toFixed(1)}ms)`, (c) => c.gray)
 			.info()
 	}
-})
+}
 
 async function main() {
 	await Promise.all([
@@ -322,16 +319,8 @@ async function main() {
 	])
 
 	for (const event of events) {
-		client.on(event['event'] as any, async(interaction, ...rest) => {
-			const scope = new Sentry.Scope()
-
-			scope
-				.setLevel('log')
-				.setSpan(Sentry.startTransaction({
-					name: `event {${event['event']}}`
-				}))
-
-			const transaction = scope.getTransaction()!
+		client.on(event['event'] as any, (interaction, ...rest) => Sentry.withIsolationScope((scope) => Sentry.startSpanManual({ name: `event {${event['event']}}`, forceTransaction: true }, async(transaction) => {
+			scope.setLevel('log')
 
 			const context = new Context(interaction, scope)
 			context['startTime'] = performance.now()
@@ -347,7 +336,7 @@ async function main() {
 					.text(error.stack ?? error.toString(), (c) => c.red)
 					.error()
 			} finally {
-				transaction.finish()
+				transaction.end()
 			}
 
 			logger()
@@ -356,7 +345,7 @@ async function main() {
 				.text(`${event['event']}`, (c) => c.cyan)
 				.text(`(${(performance.now() - context['startTime']).toFixed(1)}ms)`, (c) => c.gray)
 				.info()
-		})
+		})))
 	}
 
 	await client.login(env.BOT_TOKEN).then(async() => {

@@ -7,6 +7,8 @@ import { and, eq, sql } from "drizzle-orm"
 
 export default new Crontab()
 	.cron('* * * * *')
+	.when(() => client.isReady())
+	.monitor(() => `bot-check-demo-accesses-${client.user!.id}`, { maxRuntime: 10 })
 	.listen(async(ctx) => {
 		const expiredDemoAccesses = await ctx.database.select({
 			id: ctx.database.schema.demoAccesses.id,
