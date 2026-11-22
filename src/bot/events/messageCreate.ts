@@ -2,7 +2,7 @@ import Event from "@/bot/event"
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Message } from "discord.js"
 import axios from "axios"
 import { size } from "@rjweb/utils"
-import { recognize } from "tesseract.js"
+import { createWorker } from "tesseract.js"
 import { and, eq, sql } from "drizzle-orm"
 import diagnose from "../buttons/tickets/open"
 
@@ -33,6 +33,8 @@ const commonFileExtensions: Record<string, string> = Object.freeze({
 })
 
 const commonFileExtensionsArr = Object.keys(commonFileExtensions)
+
+const ocrContentTypes = Object.freeze(['image/png', 'image/jpeg', 'image/bmp', 'image/webp', 'image/gif'])
 
 export default new Event()
 	.listenTo((events) => events.MessageCreate)
@@ -79,13 +81,17 @@ export default new Event()
 		if (ctx.interaction.channel.type === ChannelType.GuildText) {
 			let error = ctx.interaction.content.concat(' ')
 
-			const images = ctx.interaction.attachments.filter((a) => a.width && a.size < size(10).mb())
+			const images = ctx.interaction.attachments.filter((a) => a.contentType && ocrContentTypes.includes(a.contentType) && a.size < size(10).mb())
 			if (images.size) {
 				error += await Promise.all(images.map(async(a) => {
 					const { data: buffer } = await axios.get<Buffer>(a.url, { responseType: 'arraybuffer' }),
-						data = await recognize(buffer, 'eng')
+						worker = await createWorker('eng', 1, { errorHandler: () => {} })
 
-					return data.data.text
+					const data = await worker.recognize(buffer)
+						.catch(() => null)
+						.finally(() => worker.terminate())
+
+					return data?.data.text
 				})).then((words) => words.join(' '))
 			}
 
